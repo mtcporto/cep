@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta de CEP Internacional</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 40px;
+  }
+  
+  h2 {
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 28px;
+    font-weight: 600;
+  }
+  
+  .subtitle {
+    color: #7f8c8d;
+    margin-bottom: 35px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  label {
+    display: block;
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dce1e6;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: white;
+  }
+  
+  input:focus, select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  }
+  
+  .examples {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    margin: 25px 0;
+    border-radius: 6px;
+  }
+  
+  .examples h3 {
+    color: #2c3e50;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+  
+  .example-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  
+  .example-item {
+    background: white;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e9ecef;
+  }
+  
+  .example-item:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.15);
+  }
+  
+  .example-item strong {
+    color: #3498db;
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .example-item .city {
+    color: #2c3e50;
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+  }
+  
+  .example-item .address {
+    color: #7f8c8d;
+    font-size: 12px;
+    display: block;
+  }
+  
+  .loading {
+    display: none;
+    color: #3498db;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  
+  .error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+  
+  .success {
+    color: #27ae60;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+  
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .api-response {
+    margin-top: 25px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+    display: none;
+  }
+  
+  .api-response h4 {
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .api-response pre {
+    background: #2c3e50;
+    color: #2ecc71;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+    font-family: 'Courier New', monospace;
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      padding: 25px;
+    }
+    
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+    
+    .example-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Consulta de CEP Internacional</h2>
+  <p class="subtitle">Busque endereços automaticamente por CEP (Brasil), ZIP Code (EUA) ou Code Postal (França)</p>
+
+  <div class="form-group">
+    <label for="country">País</label>
+    <select id="country">
+      <option value="BR">Brasil</option>
+      <option value="US">Estados Unidos</option>
+      <option value="FR">França</option>
+    </select>
+  </div>
+
+  <div id="examples-br" class="examples">
+    <h3>Exemplos de CEPs - Brasil</h3>
+    <div class="example-list">
+      <div class="example-item" onclick="fillZip('01310-100')">
+        <strong>01310-100</strong>
+        <span class="city">São Paulo - SP</span>
+        <span class="address">Avenida Paulista</span>
+      </div>
+      <div class="example-item" onclick="fillZip('20040-020')">
+        <strong>20040-020</strong>
+        <span class="city">Rio de Janeiro - RJ</span>
+        <span class="address">Praça Pio X - Centro</span>
+      </div>
+      <div class="example-item" onclick="fillZip('30130-100')">
+        <strong>30130-100</strong>
+        <span class="city">Belo Horizonte - MG</span>
+        <span class="address">Praça Sete de Setembro</span>
+      </div>
+      <div class="example-item" onclick="fillZip('40020-000')">
+        <strong>40020-000</strong>
+        <span class="city">Salvador - BA</span>
+        <span class="address">Avenida Sete de Setembro</span>
+      </div>
+      <div class="example-item" onclick="fillZip('80020-000')">
+        <strong>80020-000</strong>
+        <span class="city">Curitiba - PR</span>
+        <span class="address">Rua XV de Novembro</span>
+      </div>
+      <div class="example-item" onclick="fillZip('60060-000')">
+        <strong>60060-000</strong>
+        <span class="city">Fortaleza - CE</span>
+        <span class="address">Rua Barão do Rio Branco</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="examples-us" class="examples" style="display:none;">
+    <h3>Exemplos de ZIP Codes - Estados Unidos</h3>
+    <div class="example-list">
+      <div class="example-item" onclick="fillZip('10001')">
+        <strong>10001</strong>
+        <span class="city">New York, NY</span>
+        <span class="address">Manhattan</span>
+      </div>
+      <div class="example-item" onclick="fillZip('90001')">
+        <strong>90001</strong>
+        <span class="city">Los Angeles, CA</span>
+        <span class="address">Central LA</span>
+      </div>
+      <div class="example-item" onclick="fillZip('60601')">
+        <strong>60601</strong>
+        <span class="city">Chicago, IL</span>
+        <span class="address">Downtown</span>
+      </div>
+      <div class="example-item" onclick="fillZip('33101')">
+        <strong>33101</strong>
+        <span class="city">Miami, FL</span>
+        <span class="address">Downtown Miami</span>
+      </div>
+      <div class="example-item" onclick="fillZip('77001')">
+        <strong>77001</strong>
+        <span class="city">Houston, TX</span>
+        <span class="address">Downtown</span>
+      </div>
+      <div class="example-item" onclick="fillZip('94102')">
+        <strong>94102</strong>
+        <span class="city">San Francisco, CA</span>
+        <span class="address">Civic Center</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="examples-fr" class="examples" style="display:none;">
+    <h3>Exemplos de Codes Postaux - França</h3>
+    <div class="example-list">
+      <div class="example-item" onclick="fillZip('75001')">
+        <strong>75001</strong>
+        <span class="city">Paris</span>
+        <span class="address">1er Arrondissement</span>
+      </div>
+      <div class="example-item" onclick="fillZip('69001')">
+        <strong>69001</strong>
+        <span class="city">Lyon</span>
+        <span class="address">1er Arrondissement</span>
+      </div>
+      <div class="example-item" onclick="fillZip('13001')">
+        <strong>13001</strong>
+        <span class="city">Marseille</span>
+        <span class="address">1er Arrondissement</span>
+      </div>
+      <div class="example-item" onclick="fillZip('31000')">
+        <strong>31000</strong>
+        <span class="city">Toulouse</span>
+        <span class="address">Centre-ville</span>
+      </div>
+      <div class="example-item" onclick="fillZip('06000')">
+        <strong>06000</strong>
+        <span class="city">Nice</span>
+        <span class="address">Centre-ville</span>
+      </div>
+      <div class="example-item" onclick="fillZip('67000')">
+        <strong>67000</strong>
+        <span class="city">Strasbourg</span>
+        <span class="address">Centre-ville</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="zipcode">CEP / ZIP Code / Code Postal</label>
+    <input type="text" id="zipcode" placeholder="Digite ou clique em um exemplo acima" />
+    <div class="loading" id="loading">⏳ Buscando...</div>
+    <div class="error" id="error"></div>
+    <div class="success" id="success">✓ Endereço encontrado!</div>
+  </div>
+
+  <div class="form-group">
+    <label for="street">Rua / Logradouro</label>
+    <input type="text" id="street" placeholder="Rua, avenida, etc.">
+  </div>
+
+  <div class="form-group">
+    <label for="neighborhood">Bairro</label>
+    <input type="text" id="neighborhood" placeholder="Bairro">
+  </div>
+
+  <div class="grid-2">
+    <div class="form-group">
+      <label for="city">Cidade</label>
+      <input type="text" id="city" placeholder="Cidade">
+    </div>
+    
+    <div class="form-group">
+      <label for="state">Estado / Região</label>
+      <input type="text" id="state" placeholder="Estado ou região">
+    </div>
+  </div>
+
+  <div class="api-response" id="api-response">
+    <h4>📡 Resposta da API</h4>
+    <pre id="api-data"></pre>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<script>
+// Função para preencher o CEP e buscar na API
+function fillZip(zip) {
+  document.getElementById("zipcode").value = zip;
+  document.getElementById("zipcode").focus();
+  searchAddress();
+}
+
+// Mostrar/esconder exemplos conforme o país selecionado
+document.getElementById("country").addEventListener("change", () => {
+  const country = document.getElementById("country").value;
+  
+  document.getElementById("examples-br").style.display = country === "BR" ? "block" : "none";
+  document.getElementById("examples-us").style.display = country === "US" ? "block" : "none";
+  document.getElementById("examples-fr").style.display = country === "FR" ? "block" : "none";
+  
+  // Limpar campos
+  document.getElementById("zipcode").value = "";
+  clearFields();
+});
+
+function clearFields() {
+  document.getElementById("street").value = "";
+  document.getElementById("neighborhood").value = "";
+  document.getElementById("city").value = "";
+  document.getElementById("state").value = "";
+  document.getElementById("street").placeholder = "Rua, avenida, etc.";
+  document.getElementById("neighborhood").placeholder = "Bairro";
+  document.getElementById("error").style.display = "none";
+  document.getElementById("success").style.display = "none";
+  document.getElementById("api-response").style.display = "none";
+}
+
+function showLoading(show) {
+  document.getElementById("loading").style.display = show ? "block" : "none";
+}
+
+function showError(message) {
+  const errorEl = document.getElementById("error");
+  errorEl.textContent = "✗ " + message;
+  errorEl.style.display = "block";
+  document.getElementById("success").style.display = "none";
+}
+
+function showSuccess() {
+  document.getElementById("success").style.display = "block";
+  document.getElementById("error").style.display = "none";
+}
+
+function showApiResponse(data, country) {
+  const responseEl = document.getElementById("api-response");
+  const dataEl = document.getElementById("api-data");
+  
+  responseEl.style.display = "block";
+  dataEl.textContent = JSON.stringify(data, null, 2);
+}
+
+async function searchAddress() {
+  const country = document.getElementById("country").value;
+  const zip = document.getElementById("zipcode").value.trim();
+
+  if (!zip) return;
+  
+  clearFields();
+  showLoading(true);
+
+  try {
+    if (country === "BR") {
+      // ViaCEP - Brasil
+      const res = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
+      const data = await res.json();
+      
+      showApiResponse(data, country);
+      
+      if (data.erro) {
+        showError("CEP não encontrado!");
+      } else {
+        document.getElementById("street").value = data.logradouro || "";
+        document.getElementById("neighborhood").value = data.bairro || "";
+        document.getElementById("city").value = data.localidade || "";
+        document.getElementById("state").value = data.uf || "";
+        showSuccess();
+      }
+    } else if (country === "US") {
+      // Zippopotam.us - EUA
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      
+      if (!res.ok) {
+        showError("ZIP Code não encontrado!");
+      } else {
+        const data = await res.json();
+        
+        showApiResponse(data, country);
+        
+        document.getElementById("city").value = data.places[0]["place name"] || "";
+        document.getElementById("state").value = data.places[0]["state abbreviation"] || "";
+        document.getElementById("street").placeholder = "Digite o endereço completo";
+        document.getElementById("neighborhood").placeholder = "Não disponível";
+        showSuccess();
+      }
+    } else if (country === "FR") {
+      // GeoAPI França
+      const res = await fetch(`https://geo.api.gouv.fr/communes?codePostal=${zip}`);
+      const data = await res.json();
+      
+      showApiResponse(data, country);
+      
+      if (!data || data.length === 0) {
+        showError("Code Postal não encontrado!");
+      } else {
+        document.getElementById("city").value = data[0].nom || "";
+        const dept = data[0].departement?.nom || data[0].codeDepartement;
+        document.getElementById("state").value = dept || "";
+        document.getElementById("street").placeholder = "Digite o endereço completo";
+        document.getElementById("neighborhood").placeholder = "Não disponível";
+        showSuccess();
+      }
+    }
+  } catch (error) {
+    showError("Erro ao buscar endereço. Tente novamente.");
+    console.error(error);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Buscar ao sair do campo de CEP
+document.getElementById("zipcode").addEventListener("blur", searchAddress);
+
+// Buscar ao pressionar Enter
+document.getElementById("zipcode").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    searchAddress();
+  }
+});
+</script>
+
+</body>
+</html>
